@@ -1,0 +1,79 @@
+#include "XYStateEstimator.h"
+#include <math.h>
+#include "Printer.h"
+extern Printer printer;
+
+inline float angleDiff(float a) {
+  while (a<-PI) a += 2*PI;
+  while (a> PI) a -= 2*PI;
+  return a;
+}
+
+XYStateEstimator::XYStateEstimator(void)
+  : DataSource("x,y","float,float") // from DataSource
+{}
+
+void XYStateEstimator::init(void) {
+ 	state.x = 0;
+  state.y = 0;
+  state.yaw = 0;
+}
+
+void XYStateEstimator::updateState(imu_state_t * imu_state_p, gps_state_t * gps_state_p) {
+  if (gps_state_p->num_sat >= N_SATS_THRESHOLD){
+    gpsAcquired = 1;
+
+    // set the values of state.x, state.y, and state.yaw
+    // It can make use of the constants RADIUS_OF_EARTH, origin_lat, origin_lon (see XYStateEstimator.h)
+    // You can access the current GPS latitude and longitude readings with gps_state_p->lat and gps_state_p->lon
+    // You can access the current imu heading with imu_state_p->heading
+    // Also note that math.h is already included so you have access to trig functions [rad]
+
+    // Convert origin and current GPS coordinates from degrees to radians
+    float origin_lat_rad = origin_lat * PI / 180.0;
+    float origin_lon_rad = origin_lon * PI / 180.0;
+    float lat_rad = gps_state_p->lat * PI / 180.0;
+    float lon_rad = gps_state_p->lon * PI / 180.0;
+
+    // Calculate y position: arc length along a meridian (North-South)
+    state.y = RADIUS_OF_EARTH_M * (lat_rad - origin_lat_rad);
+
+    // Calculate x position: arc length along a parallel (East-West), scaled by cos(origin_lat)
+    state.x = RADIUS_OF_EARTH_M * (lon_rad - origin_lon_rad) * cos(origin_lat_rad);
+
+    // Convert IMU heading (0 deg = North, CW positive) to yaw (0 deg = East, CCW positive)
+    // yaw = 90 degrees - heading, then wrap to [-PI, PI]
+    state.yaw = angleDiff((PI / 2.0) - (imu_state_p->heading * PI / 180.0));
+
+  }
+  else{
+    gpsAcquired = 0;
+  }
+}
+
+String XYStateEstimator::printState(void) {
+  String currentState = "";
+  int decimals = 2;
+  if (!gpsAcquired){
+    currentState += "XY_State: Waiting to acquire more satellites...";
+  }
+  else{
+    currentState += "XY_State: x: ";
+    currentState += String(state.x,decimals);
+    currentState += "[m], ";
+    currentState += "y: ";
+    currentState += String(state.y,decimals);
+    currentState += "[m], ";
+    currentState += "yaw: ";
+    currentState += String(state.yaw,decimals);
+    currentState += "[rad]; ";
+  }
+  return currentState;
+}
+
+size_t XYStateEstimator::writeDataBytes(unsigned char * buffer, size_t idx) {
+  float * data_slot = (float *) &buffer[idx];
+  data_slot[0] = state.x;
+  data_slot[1] = state.y;
+  return idx + 2*sizeof(float);
+}
