@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Claude
+.claude/
+
+# Notes
+Felix's Notes/
+
+# Build
+*.o
+*.elf
+*.hex
+*.bin
+*.map
