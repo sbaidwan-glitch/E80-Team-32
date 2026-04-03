@@ -8,7 +8,10 @@
 .claude/
 
 # Notes
-Felix's Notes/
+felix-notes/
+
+# Git
+.gitattributes
 
 # Build
 *.o
