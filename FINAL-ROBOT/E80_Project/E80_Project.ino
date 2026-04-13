@@ -192,7 +192,7 @@ void loop() {
       int correction = (int)(KP_HEADING * headingError);
       int uL = constrain(BASE_POWER + correction, -255, 255);
       int uR = constrain(BASE_POWER - correction, -255, 255);
-      motor_driver.drive(uL, uR, 0);
+      motor_driver.drive(uL, uR, BASE_POWER);
 
       // Transition to STATION 
       if ((unsigned long)(currentTime - stateStartTime) >= DRIVE_DURATION_MS) {
