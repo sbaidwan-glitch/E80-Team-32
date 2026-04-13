@@ -15,7 +15,7 @@ Authors:
 #include <Pinouts.h>
 #include <TimingOffsets.h>
 #include <SensorGPS.h>
-#include <SensorIMU.h>
+// #include <SensorIMU.h>
 #include <XYStateEstimator.h>
 #include <ADCSampler.h>
 #include <ErrorFlagSampler.h>

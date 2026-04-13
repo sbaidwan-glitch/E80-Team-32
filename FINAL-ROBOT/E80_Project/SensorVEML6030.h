@@ -56,8 +56,8 @@
 #include <Wire.h>
 #include "DataSource.h"
 
-// I2C address when ADDR pin is tied to GND (datasheet Section 1)
-#define VEML6030_ADDR       0x10
+// I2C address when ADDR pin is tied to VDD (0x48) or GND (0x10)
+#define VEML6030_ADDR       0x48
 
 // Register addresses (datasheet Section 5, register map)
 #define VEML6030_REG_CONF   0x00  // ALS configuration register

@@ -5,7 +5,7 @@
 
 #include <Wire.h>
 
-#define VEML6030_ADDR      0x10
+#define VEML6030_ADDR      0x48
 #define VEML6030_REG_CONF  0x00
 #define VEML6030_REG_ALS   0x04
 #define VEML6030_REG_WHITE 0x05
@@ -41,6 +41,23 @@ void setup() {
   while (!Serial && millis() < 3000) {}
 
   Wire.begin();
+
+  // --- I2C bus scan: find all devices ---
+  Serial.println("=== I2C Bus Scan ===");
+  int found = 0;
+  for (uint8_t addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("  Found device at 0x");
+      Serial.println(addr, HEX);
+      found++;
+    }
+  }
+  if (found == 0) {
+    Serial.println("  NO devices found! Check wiring and pull-ups.");
+  }
+  Serial.println();
+
   writeRegister(VEML6030_REG_CONF, ALS_CONF_VALUE);
   delay(5);
 
