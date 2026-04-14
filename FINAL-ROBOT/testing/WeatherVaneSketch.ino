@@ -2,6 +2,9 @@
 // Assumes sensor OUT is scaled to Teensy-safe range with a voltage divider
 // Potential divider: 18k top, 30k bottom.
 
+#include <SPI.h>
+#include <SD.h>
+
 const int vanePin = A0; // Teensy input pin
 
 // Teensy ADC settings
@@ -100,9 +103,34 @@ float voltageToAngle(float volts) {
   return wrap360(angle);
 }
 
+static bool sdReady = false;
+static char logFilename[20];
+
 void setup() {
   Serial.begin(115200);
-  analogReadResolution(ADC_BITS); 
+  analogReadResolution(ADC_BITS);
+
+  // Initialize SD card
+  Serial.print("Initializing SD Card... ");
+  if (SD.begin()) {
+    Serial.println("done!");
+    sdReady = true;
+    for (int i = 0; i < 1000; i++) {
+      snprintf(logFilename, sizeof(logFilename), "VANE%04d.CSV", i);
+      if (!SD.exists(logFilename)) break;
+    }
+    File file = SD.open(logFilename, FILE_WRITE);
+    if (file) {
+      file.println("Time_ms,ADC,Voltage,Angle,Heading");
+      file.close();
+      Serial.print("Logging to: ");
+      Serial.println(logFilename);
+    } else {
+      sdReady = false;
+    }
+  } else {
+    Serial.println("failed! (continuing without logging)");
+  }
 
   delay(500);
   Serial.println("MLX90316 Analog Weather Vane");
@@ -125,6 +153,23 @@ void loop() {
   Serial.print(angleDeg, 2); // Angle
   Serial.print(",");
   Serial.println(heading); // Angle Heading (NE, E, ...)
+
+  // Log to SD
+  if (sdReady) {
+    File file = SD.open(logFilename, FILE_WRITE);
+    if (file) {
+      file.print(millis());
+      file.print(",");
+      file.print(adc);
+      file.print(",");
+      file.print(volts, 4);
+      file.print(",");
+      file.print(angleDeg, 2);
+      file.print(",");
+      file.println(heading);
+      file.close();
+    }
+  }
 
   delay(200); // 1 print every 200ms = 5 Hz (change to slower (500) or faster?)
 }

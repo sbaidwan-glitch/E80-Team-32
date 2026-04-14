@@ -4,6 +4,8 @@
 // Pull-ups: 4.7k to 3.3V on SDA and SCL
 
 #include <Wire.h>
+#include <SPI.h>
+#include <SD.h>
 
 #define VEML6030_ADDR      0x48
 #define VEML6030_REG_CONF  0x00
@@ -17,6 +19,8 @@
 #define PRINT_INTERVAL_MS  1000
 
 static unsigned long lastPrintTime = 0;
+static bool sdReady = false;
+static char logFilename[20];
 
 void writeRegister(uint8_t reg, uint16_t value) {
   Wire.beginTransmission(VEML6030_ADDR);
@@ -70,6 +74,28 @@ void setup() {
     Serial.print(check, HEX);
     Serial.println("). Check wiring: SDA=18, SCL=19, ADDR=GND");
   }
+  // Initialize SD card
+  Serial.print("Initializing SD Card... ");
+  if (SD.begin()) {
+    Serial.println("done!");
+    sdReady = true;
+    for (int i = 0; i < 1000; i++) {
+      snprintf(logFilename, sizeof(logFilename), "VEML%04d.CSV", i);
+      if (!SD.exists(logFilename)) break;
+    }
+    File file = SD.open(logFilename, FILE_WRITE);
+    if (file) {
+      file.println("Time_ms,ALS_Raw,Lux,White_Raw");
+      file.close();
+      Serial.print("Logging to: ");
+      Serial.println(logFilename);
+    } else {
+      sdReady = false;
+    }
+  } else {
+    Serial.println("failed! (continuing without logging)");
+  }
+
   Serial.println("Time,ALS_Raw,Lux,White_Raw");
   Serial.println();
 
@@ -91,6 +117,21 @@ void loop() {
     Serial.print(lux, 1);
     Serial.print(",");
     Serial.println(whiteRaw);
+
+    // Log to SD
+    if (sdReady) {
+      File file = SD.open(logFilename, FILE_WRITE);
+      if (file) {
+        file.print(now);
+        file.print(",");
+        file.print(alsRaw);
+        file.print(",");
+        file.print(lux, 1);
+        file.print(",");
+        file.println(whiteRaw);
+        file.close();
+      }
+    }
 
     lastPrintTime = now;
   }

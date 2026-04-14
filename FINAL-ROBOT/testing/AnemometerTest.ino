@@ -1,4 +1,7 @@
 
+#include <SPI.h>
+#include <SD.h>
+
 #define ANEMOMETER_PIN 16
 #define PRINT_INTERVAL_MS 1000
 
@@ -9,6 +12,8 @@ static void anemometerISR(void) {
 }
 
 static unsigned long lastPrintTime = 0;
+static bool sdReady = false;
+static char logFilename[20];
 
 void setup() {
   Serial.begin(115200);
@@ -18,6 +23,29 @@ void setup() {
 
   pinMode(ANEMOMETER_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ANEMOMETER_PIN), anemometerISR, RISING);
+
+  // Initialize SD card
+  Serial.print("Initializing SD Card... ");
+  if (SD.begin()) {
+    Serial.println("done!");
+    sdReady = true;
+    // Find next available filename
+    for (int i = 0; i < 1000; i++) {
+      snprintf(logFilename, sizeof(logFilename), "ANEMO%03d.CSV", i);
+      if (!SD.exists(logFilename)) break;
+    }
+    File file = SD.open(logFilename, FILE_WRITE);
+    if (file) {
+      file.println("Time_ms,Pulses,Freq_Hz");
+      file.close();
+      Serial.print("Logging to: ");
+      Serial.println(logFilename);
+    } else {
+      sdReady = false;
+    }
+  } else {
+    Serial.println("failed! (continuing without logging)");
+  }
 
   lastPrintTime = millis();
   pulseCount = 0;
@@ -45,6 +73,19 @@ void loop() {
     Serial.print("  |  Freq: ");
     Serial.print(freq, 2);
     Serial.println(" Hz");
+
+    // Log to SD
+    if (sdReady) {
+      File file = SD.open(logFilename, FILE_WRITE);
+      if (file) {
+        file.print(now);
+        file.print(",");
+        file.print(count);
+        file.print(",");
+        file.println(freq, 2);
+        file.close();
+      }
+    }
 
     lastPrintTime = now;
   }

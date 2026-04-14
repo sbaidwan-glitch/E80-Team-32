@@ -199,7 +199,9 @@ void loop() {
         navState = NAV_STATION;
         stateStartTime = currentTime;
         motor_driver.drive(0, 0, 0);
-        printer.printMessage("Station " + String(stationsCompleted + 1) + "/" + String(NUM_STATIONS) + " - collecting", 10);
+        printer.printMessage("Station " + String(stationsCompleted + 1) + "/" + String(NUM_STATIONS) +
+          " @ (" + String(gps.state.lat, 6) + ", " + String(gps.state.lon, 6) +
+          ") sats=" + String(gps.state.num_sat), 10);
       }
     }
 

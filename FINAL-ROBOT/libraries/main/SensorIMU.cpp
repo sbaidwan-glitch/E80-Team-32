@@ -65,7 +65,7 @@ void SensorIMU::read(void) {
   state.magZ = mx * mag_ironcomp[2][0] + my * mag_ironcomp[2][1] + mz * mag_ironcomp[2][2];
 
   // populate the roll, pitch, yaw with simple orientation calcs  
-  getOrientation(state.accelX,state.accelY,state.accelZ,state.magX,state.magY,state.magY);
+  getOrientation(state.accelX,state.accelY,state.accelZ,state.magX,state.magY,state.magZ);
 }
 
 String SensorIMU::printRollPitchHeading(void) {
