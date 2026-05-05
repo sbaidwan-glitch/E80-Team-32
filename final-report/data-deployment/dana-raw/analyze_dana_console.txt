@@ -1,0 +1,57 @@
+=== analyze_dana.m run 2026-04-29 22:52:22 ===
+
+Loaded LOG007: 4434 rows, 40 columns
+Loaded LOG008: 4909 rows, 40 columns
+Loaded LOG009: 8980 rows, 40 columns
+
+Total rows: 18323 across 3 logs
+
+Rows with GPS lock (nsats >=5, non-zero lat/lon): 17903 / 18323 (97.7%)
+Shore reference (easternmost GPS sample): lat=33.462059, lon=-117.704330
+Distance from shore: min=0.0 m, max=144.4 m, mean=65.2 m
+
+=== Wind direction sanity check vs WeatherSpark (~215 deg) ===
+  Vane forward-pointing voltage: 0.520 V -> raw vane angle = 52.8 deg
+  Calibrated, vane INTO wind  (vane_corr + heading):        276.4 deg
+  Calibrated, vane AWAY wind  (vane_corr + heading + 180):   96.4 deg
+  Uncalibrated (vane + heading):                            329.1 deg
+  Uncalibrated (heading - vane):                              5.7 deg
+  WeatherSpark expected (regional):                        ~215.0 deg
+
+Combined CSV saved: /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/dana_combined.csv
+
+Saved figure A: GPS track
+Saved figure B: BPW vs distance
+Saved figure C: wind vs distance
+Saved figure D: wind direction (calibrated, both conventions)
+Saved figure F: wind rose
+Saved figure E: wind power density vs distance
+
+=== Energy resource summary (the headline finding) ===
+Measured wind (deployment, harbor):
+  mean v = 2.16 m/s -> wind power density = 6.2 W/m^2
+Coastal reference (WeatherSpark Dana Point, 09-11 PDT):
+  mean v = 4.92 m/s (11 mph) -> wind power density = 72.8 W/m^2
+Solar irradiance (CIMIS Station 241, W/m^2):
+  08:00 PST  (09:00 PDT): 405.0 W/m^2
+  09:00 PST  (10:00 PDT): 546.0 W/m^2
+  mean over deployment window: 475.5 W/m^2
+
+Ratios (these are the report headlines):
+  Solar / measured wind:  76.6x
+  Solar / coastal wind:   6.5x
+  Coastal wind / harbor wind: 11.7x (harbor sheltering effect)
+
+=== Distance-binned means (20 m bins) ===
+Bin (m)      N        BPW (V)      Wind (m/s)   Wind dir (deg)
+------------------------------------------------------------
+0-20         2263     0.523        2.77         220.1       
+20-40        3110     0.518        2.41         215.0       
+40-60        4762     0.518        2.11         203.3       
+60-80        1679     0.524        2.43         183.0       
+80-100       1080     0.514        2.64         196.6       
+100-120      2124     0.518        2.20         171.8       
+120-140      2376     0.460        1.39         195.7       
+140-160      509      0.522        0.06         154.4       
+
+All outputs in: /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw

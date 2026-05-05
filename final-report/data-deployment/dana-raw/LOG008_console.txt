@@ -1,0 +1,25 @@
+=== logreader_danapoint.m: dana LOG008 ===
+Run timestamp: 2026-04-26 17:17:03
+
+Loaded 4909 samples (8.1 min) from /Users/felixpeng/Desktop/dana/LOG008.BIN
+Sketch detected: DanaPointOpen
+
+Open-loop sketch -- no stations to summarize
+
+Total samples: 4909 (8.1 minutes @ 10 Hz)
+
+=== Mag diagnostic ===
+  Center:        (13.50, -12.09) uT   (should be near origin after cal)
+  Mean radius:    19.71 uT           (Earth field is ~25-65 uT)
+  Relative spread: 0.429              (tight circle -> <0.05; saturated blob -> ~0)
+  ** Center is far from origin - hard-iron offset needs calibration.
+CSV exported: /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/LOG008.csv
+Saved figure 1 -> /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/LOG008_fig1_timeseries.png
+Saved figure 2 -> /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/LOG008_fig2_gps.png
+Saved figure 3 -> /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/LOG008_fig3_mag.png
+Saved figure 5 -> /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw/LOG008_fig5_anemo.png
+
+All outputs in: /Users/felixpeng/Downloads/repos/E80-Team-32/final-writeup/data-deployment/dana-raw
+  - LOG008_console.txt   (this console output)
+  - LOG008.csv           (full data, every logged + derived column)
+  - LOG008_fig*.png      (each MATLAB figure that was generated)
