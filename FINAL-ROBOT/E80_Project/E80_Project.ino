@@ -7,18 +7,17 @@ Based on Default_Robot.ino from E80 Github.
 
 Sensors:
   - VEML6030: ambient light (I2C, pins 18/19)
-  - AH9246: anemometer hall effect (digital interrupt, pin 16)
-  - BPW34: photodiode + TIA (analog, pin 15 = A01, logged by ADCSampler)
-  - MLX90316 analog weather vane (analog, pin 14 = A00)
+  - AH9246: anemometer hall effect (digital interrupt, pin 14)
+  - MLX90316 analog weather vane (analog, pin 15 = A01)
+  - BPW34: photodiode + TIA (analog, logged by ADCSampler)
 
 Navigation:
   Point robot away from shore, press button to start.
   Robot drives straight, stops at each station to collect data, then drives to the next station.
 
 Pin usage on MTB protoboard connector (J1):
-  Pin 14 (A00) - MLX90316 weather vane analog output
-  Pin 15 (A01) - BPW34 TIA analog output (0-3.3V)
-  Pin 16 (A02) - AH9246 anemometer digital pulses
+  Pin 14 (A00) - AH9246 anemometer digital pulses
+  Pin 15 (A01) - MLX90316 weather vane analog output
   Pin 18 (SDA) - VEML6030 I2C data
   Pin 19 (SCL) - VEML6030 I2C clock
 
@@ -122,8 +121,8 @@ void setup() {
   motor_driver.init();
   led.init();
   veml6030.init();      // configures VEML6030 over I2C (shared bus with IMU)
-  anemometer.init();    // attaches interrupt on pin 16
-  weatherVane.init();   // configures ADC for MLX90316 on pin 14
+  anemometer.init();    // attaches interrupt on pin 14
+  weatherVane.init();   // configures ADC for MLX90316 on pin 15
 
   state_estimator.init();
 

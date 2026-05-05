@@ -59,8 +59,20 @@ private:
   // Offsets applied to raw x/y/z accel values
   float accel_offsets[3]      = { 1.0F, 1.0F, 1.0F };
 
-  // Offsets applied to raw x/y/z mag values
-  float mag_offsets[3]        = { 1.00, 1.00, 1.00 };
+  // Hard-iron offsets applied to mag values AFTER mGauss->uTesla conversion
+  // (see SensorIMU.cpp read(): offsets are subtracted from uT values, not mGauss).
+  //
+  // Values derived from MAG_0003.CSV at Dana Point (3-rotation upright spin,
+  // 130 s, processed by testing/MagCalibration/MagLogger/magreader.m):
+  //     magX raw range [-55.50, +1.50] -> midpoint -27.00
+  //     magY raw range [-47.10, +3.70] -> midpoint -21.70
+  //     magZ raw range [-57.90, -42.00] (vertical Earth field, not subtracted)
+  // Z forced to 0 -- 2D cal only (surface vehicle stays level; subtracting
+  // Earth's vertical component would break tilt comp if ever non-level).
+  //
+  // X/Y span ratio ~1.12 -> ~12% soft-iron stretch left uncorrected. Heading
+  // will carry a few-degree sinusoidal error; acceptable for this mission.
+  float mag_offsets[3]        = { -27.0, -21.7, 0.0 };
   
   // Soft iron error compensation matrix
   float mag_ironcomp[3][3] =  { {  1.00,     0.00,     0.00   },

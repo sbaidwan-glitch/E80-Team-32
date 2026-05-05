@@ -40,6 +40,13 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 3000) {}
 
+  // Disable motor pins -- they float on boot and the H-bridge will run them.
+  const uint8_t motorPins[] = {3, 4, 5, 6, 22, 23};
+  for (uint8_t i = 0; i < sizeof(motorPins); i++) {
+    pinMode(motorPins[i], OUTPUT);
+    digitalWrite(motorPins[i], LOW);
+  }
+
   pinMode(GPS_LOCK_LED, OUTPUT);
   digitalWrite(GPS_LOCK_LED, LOW);
 

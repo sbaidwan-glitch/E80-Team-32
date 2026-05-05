@@ -5,31 +5,35 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int vanePin = A0; // Teensy input pin
+const int vanePin = A1;  // Teensy input pin (moved from A0 to A1)
 
 // Teensy ADC settings
 const float Vref = 3.3f;
-const int ADC_BITS = 12; // Teensy read resolution
-const int ADC_MAX = (1 << ADC_BITS) - 1;   // 4095 for 12-bit
+const int ADC_BITS = 12;                  // Teensy read resolution
+const int ADC_MAX = (1 << ADC_BITS) - 1;  // 4095 for 12-bit
 
 // Measured/calibrated voltage range at the Teensy pin.
-// REPLACE!
+// REPLACE after calibration!
 float Vmin_meas = 0.094f;
 float Vmax_meas = 3.000f;
 
-// Measured/calibrated North Offset 
-// REPLACE! Ex: if the raw angle reads 73 deg when vane points north, set northOffset = -73.
+// Measured/calibrated North Offset
+// The raw angle reads 230 deg when vane points north, set northOffset = -230.
 float northOffsetDeg = 0.0f;
 
 // Set true if angle increases in the wrong direction when the vane rotates.
 bool reverseDirection = false;
 
-// Moving-average smoothing (incase of fluttering, avg last 10 samples)
+// Moving-average smoothing (avg last 10 samples to reduce flutter)
 const int N_SAMPLES = 10;
 int sampleBuffer[N_SAMPLES];
 int sampleIndex = 0;
 long sampleSum = 0;
 bool bufferFilled = false;
+
+// SD logging
+static bool sdReady = false;
+static char logFilename[20];
 
 float clampf(float x, float lo, float hi) {
   if (x < lo) return lo;
@@ -44,27 +48,13 @@ float wrap360(float angleDeg) {
   return angleDeg;
 }
 
-// Return Directions (Ex. NE, E, S)
-const char* headingLabel(float angleDeg) {
-  angleDeg = wrap360(angleDeg);
-
-  if (angleDeg < 22.5f || angleDeg >= 337.5f) return "N";
-  if (angleDeg < 67.5f)  return "NE";
-  if (angleDeg < 112.5f) return "E";
-  if (angleDeg < 157.5f) return "SE";
-  if (angleDeg < 202.5f) return "S";
-  if (angleDeg < 247.5f) return "SW";
-  if (angleDeg < 292.5f) return "W";
-  return "NW";
-}
-
-// initialize first 10 readings + fill n/a data 
+// initialize first 10 readings + fill n/a data
 int readSmoothedADC() {
   int raw = analogRead(vanePin);
 
   // Fill buffer first time
   if (!bufferFilled) {
-  sampleSum = 0;
+    sampleSum = 0;
     for (int i = 0; i < N_SAMPLES; i++) {
       sampleBuffer[i] = raw;
       sampleSum += raw;
@@ -103,11 +93,16 @@ float voltageToAngle(float volts) {
   return wrap360(angle);
 }
 
-static bool sdReady = false;
-static char logFilename[20];
-
 void setup() {
   Serial.begin(115200);
+
+  // Disable motor pins -- they float on boot and the H-bridge will run them.
+  const uint8_t motorPins[] = {3, 4, 5, 6, 22, 23};
+  for (uint8_t i = 0; i < sizeof(motorPins); i++) {
+    pinMode(motorPins[i], OUTPUT);
+    digitalWrite(motorPins[i], LOW);
+  }
+
   analogReadResolution(ADC_BITS);
 
   // Initialize SD card
@@ -121,7 +116,7 @@ void setup() {
     }
     File file = SD.open(logFilename, FILE_WRITE);
     if (file) {
-      file.println("Time_ms,ADC,Voltage,Angle,Heading");
+      file.println("Time_ms,ADC,Voltage,Angle");
       file.close();
       Serial.print("Logging to: ");
       Serial.println(logFilename);
@@ -134,25 +129,22 @@ void setup() {
 
   delay(500);
   Serial.println("MLX90316 Analog Weather Vane");
-  Serial.println("Time,ADC,Voltage,Angle,Heading");
+  Serial.println("Time,ADC,Voltage,Angle");
 }
 
 void loop() {
   int adc = readSmoothedADC();
   float volts = adcToVoltage(adc);
   float angleDeg = voltageToAngle(volts);
-  const char* heading = headingLabel(angleDeg);
 
   // Print in CSV format
-  Serial.print(millis()); // time
+  Serial.print(millis());
   Serial.print(",");
-  Serial.print(adc); // raw teensy output
+  Serial.print(adc);
   Serial.print(",");
-  Serial.print(volts, 4); // Voltage (use to calibrate)
+  Serial.print(volts, 4);
   Serial.print(",");
-  Serial.print(angleDeg, 2); // Angle
-  Serial.print(",");
-  Serial.println(heading); // Angle Heading (NE, E, ...)
+  Serial.println(angleDeg, 2);
 
   // Log to SD
   if (sdReady) {
@@ -164,22 +156,10 @@ void loop() {
       file.print(",");
       file.print(volts, 4);
       file.print(",");
-      file.print(angleDeg, 2);
-      file.print(",");
-      file.println(heading);
+      file.println(angleDeg, 2);
       file.close();
     }
   }
 
-  delay(200); // 1 print every 200ms = 5 Hz (change to slower (500) or faster?)
+  delay(200);  // 5 Hz
 }
-
-
-  // Serial.print("ADC: "); // raw integer from Teensy ADC 
-  // Serial.print(adc);
-  // Serial.print("   V: "); // converted voltage value, 3 decimals
-  // Serial.print(volts, 3); 
-  // Serial.print("   Angle(deg): "); // Angle from mapping equation
-  // Serial.print(angleDeg, 1);
-  // Serial.print("   Heading: "); // Angle Headings
-  // Serial.println(heading);

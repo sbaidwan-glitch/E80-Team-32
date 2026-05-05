@@ -7,23 +7,24 @@
 #include "DataSource.h"
 
 // AH9246 hall effect sensor output connects to this pin.
-// This is Teensy pin 16 (also labeled A2 on the MTB).
-// Pin chosen in Research Project proposal, Figure 2.
-// Note: ADCSampler also reads pin 16 as an analog channel (A02),
-// which will return noise since we configure it as digital here.
-// That A02 column in the log can be ignored.
-#define ANEMOMETER_PIN 16
+// Teensy pin 14 (A0 on the MTB). Used as digital interrupt.
+#define ANEMOMETER_PIN 14
+
+// Minimum microseconds between valid pulses (debounce/noise filter)
+#define MIN_PULSE_SPACING_US 10000
+
+// Moving average window size for RPM smoothing
+#define ANEMO_N_AVG 5
 
 /*
  * SensorAnemometer counts pulses from the AH9246 hall effect sensor
  * to measure cup anemometer rotation frequency, then converts to
  * wind speed using a calibration curve.
  *
- * The AH9246 outputs a digital pulse each time the magnet on the
- * rotating shaft passes by. We count rising edges via interrupt
- * and compute frequency each loop period.
+ * The AH9246 output goes LOW when the magnet passes (FALLING edge).
+ * Debounce filtering rejects pulses closer than MIN_PULSE_SPACING_US.
  *
- * Calibration: wind_speed = CAL_SLOPE * frequency + CAL_OFFSET
+ * Calibration: velocity = (rpm - B_CAL) / A_CAL
  * These values must be updated after wind tunnel calibration.
  */
 class SensorAnemometer : public DataSource {
@@ -47,10 +48,16 @@ public:
 private:
   unsigned long lastReadTime;
 
-  // Calibration constants (update after wind tunnel testing)
-  // wind_speed = CAL_SLOPE * frequency + CAL_OFFSET
-  static constexpr float CAL_SLOPE  = 1.0;  // placeholder [m/s per Hz]
-  static constexpr float CAL_OFFSET = 0.0;  // placeholder [m/s]
+  // Moving average for RPM
+  float rpmHist[ANEMO_N_AVG];
+  int rpmIdx;
+  bool rpmFilled;
+  float movingAverageRPM(float newVal);
+
+  // Calibration constants (from wind tunnel testing)
+  // velocity = (rpm - B_CAL) / A_CAL
+  static constexpr float A_CAL = 21.1f;
+  static constexpr float B_CAL = -1.71f;
 };
 
 #endif

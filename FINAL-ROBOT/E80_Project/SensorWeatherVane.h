@@ -5,8 +5,8 @@
 #include "DataSource.h"
 
 // MLX90316 analog output, read through a voltage divider (18k/30k).
-// Teensy pin 14 = A0 on the MTB (A00 column in ADCSampler).
-#define VANE_PIN A0
+// Teensy pin 15 = A1 on the MTB.
+#define VANE_PIN A1
 
 class SensorWeatherVane : public DataSource {
 public:

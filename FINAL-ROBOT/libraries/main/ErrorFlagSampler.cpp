@@ -11,7 +11,7 @@ ErrorFlagSampler::ErrorFlagSampler(void)
 void ErrorFlagSampler::init(void)
 {
   for (int i=0; i<NUM_FLAGS; i++){
-    pinMode(pinMap[i],INPUT);
+    pinMode(pinMap[i],INPUT_PULLUP);
   }
 }
 

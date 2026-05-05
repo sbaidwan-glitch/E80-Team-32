@@ -49,20 +49,28 @@ static char logFilename[20];
 static unsigned long sampleCount = 0;
 
 // ---- Calibration values ----
-// Replace these with your values from Mag_Calibration.m
-// Until calibrated, leave as-is (minimal correction)
-float mag_offsets[3]       = { 1.00, 1.00, 1.00 };
+// Hard-iron offsets from MAG_0003.CSV (Dana Point, 3-rotation upright spin,
+// processed by magreader.m). Z forced to 0 per 2D-only scope.
+// Keep in sync with libraries/main/SensorIMU.h.
+float mag_offsets[3]       = { -27.0, -21.7, 0.0 };
 float mag_ironcomp[3][3]   = { {  1.00,  0.00,  0.00 },
                                {  0.00,  1.00,  0.00 },
                                {  0.00,  0.00,  1.00 } };
 float accel_offsets[3]     = { 1.0, 1.0, 1.0 };
 
 // Set to true after you paste in real calibration values
-#define CALIBRATION_APPLIED false
+#define CALIBRATION_APPLIED true
 
 void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 3000) {}
+
+  // Disable motor pins -- they float on boot and the H-bridge will run them.
+  const uint8_t motorPins[] = {3, 4, 5, 6, 22, 23};
+  for (uint8_t i = 0; i < sizeof(motorPins); i++) {
+    pinMode(motorPins[i], OUTPUT);
+    digitalWrite(motorPins[i], LOW);
+  }
 
   Serial.println("=== E80 Magnetometer Logger ===");
   if (CALIBRATION_APPLIED) {
